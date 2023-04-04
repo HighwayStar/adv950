@@ -1545,7 +1545,7 @@ serial8250_rx_chars(struct uart_8250_port *up, unsigned char lsr)
 		if (uart_handle_sysrq_char(port, ch))
 			goto ignore_char;
 
-		adv_uart_insert_char(port, lsr, UART_LSR_OE, ch, flag);
+		uart_insert_char(port, lsr, UART_LSR_OE, ch, flag);
 
 ignore_char:
 		lsr = serial_in(up, UART_LSR);
@@ -1670,7 +1670,7 @@ void serial8250_tx_chars(struct uart_8250_port *up)
 	}
 
 	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
-		adv_uart_write_wakeup(port);
+		uart_write_wakeup(port);
 
 	DEBUG_INTR("THRE...");
 
@@ -1693,9 +1693,9 @@ unsigned int serial8250_modem_status(struct uart_8250_port *up)
 		if (status & UART_MSR_DDSR)
 			port->icount.dsr++;
 		if (status & UART_MSR_DDCD)
-			adv_uart_handle_dcd_change(port, status & UART_MSR_DCD);
+			uart_handle_dcd_change(port, status & UART_MSR_DCD);
 		if (status & UART_MSR_DCTS)
-			adv_uart_handle_cts_change(port, status & UART_MSR_CTS);
+			uart_handle_cts_change(port, status & UART_MSR_CTS);
 
 		wake_up_interruptible(&port->state->port.delta_msr_wait);
 	}
@@ -3087,7 +3087,7 @@ static void __init serial8250_register_ports(struct uart_driver *drv)
 		up->mcr_mask = ~ALPHA_KLUDGE_MCR;
 		up->mcr_force = ALPHA_KLUDGE_MCR;
 
-		adv_uart_add_one_port(drv, &up->port);
+		uart_add_one_port(drv, &up->port);
 	}
 }
 
@@ -3160,7 +3160,7 @@ int __init early_serial_setup(struct uart_port *port)
  */
 void adv_serial8250_suspend_port(int line)
 {
-	adv_uart_suspend_port(&serial8250_reg, &serial8250_ports[line].port);
+	uart_suspend_port(&serial8250_reg, &serial8250_ports[line].port);
 }
 
 
@@ -3184,7 +3184,7 @@ void adv_serial8250_resume_port(int line)
 		serial_port_out(port, UART_LCR, 0);
 		port->uartclk = 921600*16;
 	}
-	adv_uart_resume_port(&serial8250_reg, port);
+	uart_resume_port(&serial8250_reg, port);
 }
 
 
@@ -3210,7 +3210,7 @@ static struct uart_8250_port *serial8250_find_match_or_unused(struct uart_port *
 	 * First, find a port entry which matches.
 	 */
 	for (i = 0; i < nr_uarts; i++)
-		if (adv_uart_match_port(&serial8250_ports[i].port, port))
+		if (uart_match_port(&serial8250_ports[i].port, port))
 			return &serial8250_ports[i];
 
 	/*
@@ -3305,10 +3305,11 @@ int adv_serial8250_register_8250_port(struct uart_8250_port *up)
 			serial8250_isa_config(0, &uart->port,
 					&uart->capabilities);
 
-		//ret = uart_add_one_port(&serial8250_reg, &uart->port);
-		adv_uart_configure_port(&serial8250_reg, uart->port.state, &uart->port);
-		//if (ret == 0)
-			ret = uart->port.line;
+		ret = uart_add_one_port(&serial8250_reg, &uart->port);
+		if (ret != 0) {
+			printk("uart_add_one_port problem %d", ret);
+		} 
+		ret = uart->port.line;
 	}
 	mutex_unlock(&serial_mutex);
 
@@ -3351,13 +3352,13 @@ void adv_serial8250_unregister_port(int line)
 	struct uart_8250_port *uart = &serial8250_ports[line];
 
 	mutex_lock(&serial_mutex);
-	adv_uart_remove_one_port(&serial8250_reg, &uart->port);
+	uart_remove_one_port(&serial8250_reg, &uart->port);
 	if (serial8250_isa_devs) {
 		uart->port.flags &= ~UPF_BOOT_AUTOCONF;
 		uart->port.type = PORT_UNKNOWN;
 		uart->port.dev = &serial8250_isa_devs->dev;
 		uart->capabilities = uart_config[uart->port.type].flags;
-		adv_uart_add_one_port(&serial8250_reg, &uart->port);
+		uart_add_one_port(&serial8250_reg, &uart->port);
 	} else {
 		uart->port.dev = NULL;
 	}
@@ -3375,7 +3376,7 @@ int adv_serial8250_init(void)
 		share_irqs ? "en" : "dis");
 
 	serial8250_reg.nr = UART_NR;
-	ret = adv_uart_register_driver(&serial8250_reg);
+	ret = uart_register_driver(&serial8250_reg);
 
 	if (ret)
 		goto out;
@@ -3397,10 +3398,10 @@ void __exit adv_serial8250_exit(void)
 	{
 		state = ((struct uart_driver*)(&serial8250_reg))->state + ((struct uart_port *)(&serial8250_ports[i].port))->line;
 		if (state->uart_port != NULL)
-			adv_uart_remove_one_port(&serial8250_reg, &serial8250_ports[i].port);
+			uart_remove_one_port(&serial8250_reg, &serial8250_ports[i].port);
 	}
 
-	adv_uart_unregister_driver(&serial8250_reg);
+	uart_unregister_driver(&serial8250_reg);
 }
 
 EXPORT_SYMBOL(adv_serial8250_unregister_port);

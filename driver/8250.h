@@ -16,30 +16,12 @@
 #include <linux/serial_8250.h>
 #endif
 
-void adv_uart_write_wakeup(struct uart_port *port);
-int adv_uart_resume_port(struct uart_driver *drv, struct uart_port *uport);
-void adv_serial8250_resume_port(int line);
-int adv_uart_suspend_port(struct uart_driver *drv, struct uart_port *uport);
-void adv_serial8250_suspend_port(int line);
-void adv_uart_configure_port(struct uart_driver *drv, struct uart_state *state,struct uart_port *port);
-int adv_uart_match_port(struct uart_port *port1, struct uart_port *port2);
 int adv_serial8250_register_port(struct uart_port *port);
 int __init adv_serial8250_init(void);
-int adv_uart_register_driver(struct uart_driver *drv);
-int adv_uart_remove_one_port(struct uart_driver *drv, struct uart_port *uport);
-int adv_uart_register_driver(struct uart_driver *drv);
-int adv_uart_add_one_port(struct uart_driver *drv, struct uart_port *uport);
-void __exit adv_serial8250_exit(void);
-void adv_uart_unregister_driver(struct uart_driver *drv);
 void adv_serial8250_unregister_port(int line);
-unsigned int adv_uart_get_divisor(struct uart_port *port, unsigned int baud);
-void uart_configure_port(struct uart_driver *drv, struct uart_state *state,struct uart_port *port);
-void adv_uart_insert_char(struct uart_port *port, unsigned int status,unsigned int overrun, unsigned int ch, unsigned int flag);
-void adv_uart_handle_dcd_change(struct uart_port *uport, unsigned int status);
-void adv_uart_handle_cts_change(struct uart_port *uport, unsigned int status);
-void adv_uart_configure_port(struct uart_driver *drv, struct uart_state *state,struct uart_port *port);
-
-
+void adv_serial8250_resume_port(int line);
+void __exit adv_serial8250_exit(void);
+void adv_serial8250_suspend_port(int line);
 
 struct uart_8250_port {
 	struct uart_port	port;
