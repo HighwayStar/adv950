@@ -3260,7 +3260,7 @@ int adv_serial8250_register_8250_port(struct uart_8250_port *up)
 
 	uart = serial8250_find_match_or_unused(&up->port);
 	if (uart) {
-		//uart_remove_one_port(&serial8250_reg, &uart->port);
+		uart_remove_one_port(&serial8250_reg, &uart->port);
 
 		uart->port.iobase       = up->port.iobase;
 		uart->port.membase      = up->port.membase;
