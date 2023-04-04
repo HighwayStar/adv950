@@ -2747,6 +2747,7 @@ serial8250_set_termios(struct uart_port *port, struct ktermios *termios,
 		adv_serial8250_do_set_termios(port, termios, old);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
 static void
 serial8250_set_ldisc(struct uart_port *port, int new)
 {
@@ -2756,6 +2757,7 @@ serial8250_set_ldisc(struct uart_port *port, int new)
 	} else
 		port->flags &= ~UPF_HARDPPS_CD;
 }
+#endif
 void adv_serial8250_do_pm(struct uart_port *port, unsigned int state,
 		      unsigned int oldstate)
 {
@@ -2987,7 +2989,9 @@ static struct uart_ops serial8250_pops = {
 	.startup	= serial8250_startup,
 	.shutdown	= serial8250_shutdown,
 	.set_termios	= serial8250_set_termios,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
 	.set_ldisc	= serial8250_set_ldisc,
+#endif
 	.pm		= serial8250_pm,
 	.type		= serial8250_type,
 	.release_port	= serial8250_release_port,
